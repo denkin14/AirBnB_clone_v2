@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """ State Module for HBNB project """
-from models.city import City
+import models
 from models.base_model import BaseModel, Base
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
@@ -8,22 +8,19 @@ from os import getenv
 
 
 class State(BaseModel, Base):
-    """ states table declarative class """
-    __tablename__ = 'states'
+    """ State class """
+    __tablename__ = "states"
     name = Column(String(128), nullable=False)
-    cities = relationship('City', backref='state', cascade='all, delete')
 
-    if getenv('HBNB_TYPE_STORAGE') != 'db':
+    if getenv("HBNB_TYPE_STORAGE") == "db":
+        cities = relationship("City", backref="state",
+                              cascade="all, delete-orphan")
+    else:
         @property
         def cities(self):
-            """ get the list of City instances whose
-                state_id equals current id
-            """
-            from models import storage
-            cities = []
-            all_cities = storage.all(City)
-            for city in all_cities.values():
-                if all(['state_id' in city.__dict__.keys(),
-                        city.state_id == self.id]):
-                    cities.append(city)
-            return cities
+            city_instances = []
+            city_dict = models.storage.all(models.city.City)
+            for k, v in city_dict.items():
+                if v.state_id == self.id:
+                    city_instances.append(v)
+            return city_instances
