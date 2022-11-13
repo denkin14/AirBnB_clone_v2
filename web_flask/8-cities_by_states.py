@@ -1,35 +1,26 @@
 #!/usr/bin/python3
-"""
-This Script will start a Flask web application
-/cities_by_states: display a HTML page: (inside the tag BODY)
+""" Flask app that display all
+    states on route /cities_by_states
 """
 from flask import Flask, render_template
-from models import storage, State
+from models import storage
+from models.state import State
 
 app = Flask(__name__)
-app.url_map.strict_slashes = False
+
+
+@app.route('/cities_by_states', strict_slashes=False)
+def states():
+    """Returns list of cities per state"""
+    states = storage.all(State)
+    return render_template('8-cities_by_states.html', states=states)
 
 
 @app.teardown_appcontext
-def close_context(exception):
+def tear_down(td):
+    """close session when application context in popped"""
     storage.close()
 
 
-@app.route('/cities_by_states')
-def cities_states_route():
-    # route that fetches all cities in a stage from the sotrage engine
-
-    states = storage.all(State)
-    all_states = []
-
-    for state in states.values():
-        cities = state.cities
-        cities_list = list(filter(lambda x: x.state_id == state.id, cities))
-        city_data = list(map(lambda x: [x.id, x.name], cities_list))
-        all_states.append([state.id, state.name, city_data])
-
-    return render_template('8-cities_by_states.html', states=all_states)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
