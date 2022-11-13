@@ -1,29 +1,26 @@
 #!/usr/bin/python3
-"""
-This Script will start a Flask web application
-/states_list: display a HTML page: (inside the tag BODY) 
+""" Flask app that display all
+    states on route /state_list
 """
 from flask import Flask, render_template
-from models import storage, State
+from models import storage
+from models.state import State
 
 app = Flask(__name__)
-app.url_map.strict_slashes = False
+
+
+@app.route('/states_list', strict_slashes=False)
+def states():
+    """Returns list of state"""
+    states = storage.all(State)
+    return render_template('7-states_list.html', states=states)
 
 
 @app.teardown_appcontext
-def close_context(exception):
+def tear_down(td):
+    """close session when application context in popped"""
     storage.close()
 
 
-@app.route('/states_list')
-def states_route():
-    states = storage.all(State)
-    all_states = []
-
-    for state in states.values():
-        all_states.append([state.id, state.name])
-    return render_template('7-states_list.html', states=all_states)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
